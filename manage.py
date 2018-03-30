@@ -4,9 +4,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import redis
-from flask_wtf.csrf import CsrfProtect
-
-
+#from flask_wtf.csrf import CsrfProtect
+from flask_script import Manager
+from flask_migrate import Migrate,MigrateCommand
 
 class Config(object):
     DEBUG = True
@@ -20,19 +20,22 @@ class Config(object):
 
 
 app = Flask(__name__)
-CsrfProtect(app)
+# CsrfProtect(app)
 
 #注册数据库
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 redis_store = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
-
+manager = Manager(app)
+Migrate(app,db)
+manager.add_command('db',MigrateCommand)
 #定义视图函数
 @app.route('/')
 def index():
+    redis_store.set('name','sz07')
     return 'index'
 
 #启动该应用的入口
 if __name__ == '__main__':
     # 启动应用
-    app.run()
+    manager.run()
