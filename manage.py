@@ -4,6 +4,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import redis
+from flask_wtf.csrf import CsrfProtect
 
 
 
@@ -15,16 +16,17 @@ class Config(object):
     # 配置redis
     REDIS_HOST = '127.0.0.1'
     REDIS_PORT = 6379
+    SECTRY_KEY = '6ZgzrGKm4oG+W5E0cVzG5q5zp/iUHUckGwpyQVMrnpWxCPa0Yw59n9Wf+UN0n1ET'
+
 
 app = Flask(__name__)
+CsrfProtect(app)
 
-
-
-db = SQLAlchemy(app)
-
-redis_store = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
 #注册数据库
 app.config.from_object(Config)
+db = SQLAlchemy(app)
+redis_store = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+
 #定义视图函数
 @app.route('/')
 def index():
