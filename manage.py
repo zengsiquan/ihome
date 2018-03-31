@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
-
-from iHome import db,app
+from iHome import db
+from iHome import get_app
 
 from flask_script import Manager
 from flask_migrate import Migrate,MigrateCommand
@@ -34,6 +34,8 @@ from flask_migrate import Migrate,MigrateCommand
 # SESSION_USE_SIGNER = True
 # PERMANENT_SESSION_LIFETIME = 3600 * 24
 
+app = get_app('development')
+
 manager = Manager(app)
 Migrate(app,db)
 manager.add_command('db',MigrateCommand)
@@ -43,8 +45,7 @@ manager.add_command('db',MigrateCommand)
 #定义视图函数
 @app.route('/')
 def index():
-    from flask import session
-    session['asd'] = 'sdfds'
+
     return 'index'
 
 #启动该应用的入口
