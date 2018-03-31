@@ -1,38 +1,50 @@
 # -*- coding:utf-8 -*-
 
-#导入Flask
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-import redis
-#from flask_wtf.csrf import CsrfProtect
+
+from iHome import db,app
+
 from flask_script import Manager
 from flask_migrate import Migrate,MigrateCommand
 
-class Config(object):
-    DEBUG = True
-    #配置数据库
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@127.0.0.1:3306/iHome'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # 配置redis
-    REDIS_HOST = '127.0.0.1'
-    REDIS_PORT = 6379
-    SECTRY_KEY = '6ZgzrGKm4oG+W5E0cVzG5q5zp/iUHUckGwpyQVMrnpWxCPa0Yw59n9Wf+UN0n1ET'
+# class Config(object):
+#     DEBUG = True
+#     SECRET_KEY = 'l40oG7xuqCMyNBDE+qfibfk1CYCitMZ7fibPFQBduCZKn22sTzDSP1mUchEMDBPq'
+#
+#
+#     #配置数据库
+#     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@127.0.0.1:3306/iHome'
+#     SQLALCHEMY_TRACK_MODIFICATIONS = False
+#     # 配置redis
+#     REDIS_HOST = '127.0.0.1'
+#     REDIS_PORT = 6379
 
-
-app = Flask(__name__)
-# CsrfProtect(app)
+# app = Flask(__name__)
 
 #注册数据库
-app.config.from_object(Config)
-db = SQLAlchemy(app)
-redis_store = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+# app.config.from_object(Config)
+# app.config['secret_key'] = '6ZgzrGKm4oG+W5E0cVzG5q5zp/iUHUckGwpyQVMrnpWxCPa0Yw59n9Wf+UN0n1ET'
+# app.secret_key = 'l40oG7xuqCMyNBDE+qfibfk1CYCitMZ7fibPFQBduCZKn22sTzDSP1mUchEMDBPq'
+
+# db = SQLAlchemy(app)
+
+# redis_store = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+
+# SESSION_TYPE = 'redis'
+# SESSION_REDIS = redis.StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+# SESSION_USE_SIGNER = True
+# PERMANENT_SESSION_LIFETIME = 3600 * 24
+
 manager = Manager(app)
 Migrate(app,db)
 manager.add_command('db',MigrateCommand)
+
+# CSRFProtect(app)
+# Session(app)
 #定义视图函数
 @app.route('/')
 def index():
-    redis_store.set('name','sz07')
+    from flask import session
+    session['asd'] = 'sdfds'
     return 'index'
 
 #启动该应用的入口
