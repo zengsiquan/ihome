@@ -43,10 +43,10 @@ manager.add_command('db',MigrateCommand)
 # CSRFProtect(app)
 # Session(app)
 #定义视图函数
-@app.route('/')
-def index():
-
-    return 'index'
+# @app.route('/')
+# def index():
+#
+#     return 'index'
 
 #启动该应用的入口
 if __name__ == '__main__':

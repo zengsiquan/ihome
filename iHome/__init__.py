@@ -18,7 +18,7 @@ def get_app(config_name):
     app.config.from_object(configs[config_name])
     # app.config['secret_key'] = '6ZgzrGKm4oG+W5E0cVzG5q5zp/iUHUckGwpyQVMrnpWxCPa0Yw59n9Wf+UN0n1ET'
     # app.secret_key = 'l40oG7xuqCMyNBDE+qfibfk1CYCitMZ7fibPFQBduCZKn22sTzDSP1mUchEMDBPq'
-
+    db.init_app(app)
 
     global redis_store
     redis_store = redis.StrictRedis(host=configs[config_name].REDIS_HOST,port=configs[config_name].REDIS_PORT)
@@ -34,4 +34,6 @@ def get_app(config_name):
 
     CSRFProtect(app)
     Session(app)
+    import api_1_0
+    app.register_blueprint(api_1_0.api)
     return app
