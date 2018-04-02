@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 
 import redis
+import logging
+
 class Config(object):
     DEBUG = True
     SECRET_KEY = 'l40oG7xuqCMyNBDE+qfibfk1CYCitMZ7fibPFQBduCZKn22sTzDSP1mUchEMDBPq'
@@ -20,11 +22,12 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     """创建调试环境下的配置类"""
-    pass
+    LOGGING_LEVEL = logging.DEBUG
 
 class ProductionConfig(Config):
     """创建线上环境下的配置类"""
     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@192.168.72.77:3306/iHome'
+    LOGGING_LEVEL = logging.WARN
 
 class UnittestConfig(Config):
     """单元测试的配置:数据库不一致"""
