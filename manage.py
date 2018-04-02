@@ -5,6 +5,7 @@ from iHome import get_app
 
 from flask_script import Manager
 from flask_migrate import Migrate,MigrateCommand
+from iHome import models
 
 # class Config(object):
 #     DEBUG = True
@@ -51,4 +52,5 @@ manager.add_command('db',MigrateCommand)
 #启动该应用的入口
 if __name__ == '__main__':
     # 启动应用
+    print app.url_map
     manager.run()
