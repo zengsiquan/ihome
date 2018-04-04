@@ -56,8 +56,8 @@ def get_app(config_name):
 
     app.url_map.converters['re'] = RegexConverter
 
-    import api_1_0
-    app.register_blueprint(api_1_0.api)
+    from iHome.api_1_0 import api
+    app.register_blueprint(api)
 
     import web_html
     app.register_blueprint(web_html.html)

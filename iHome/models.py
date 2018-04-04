@@ -29,6 +29,14 @@ class User(BaseModel, db.Model):
     houses = db.relationship("House", backref="user")  # 用户发布的房屋
     orders = db.relationship("Order", backref="user")  # 用户下的订单
 
+    @property
+    def password(self):
+        raise AttributeError('can not read')
+
+    @password.setter
+    def password(self, value):
+        # value 是外界传入的密码的明文数据
+        self.password_hash = generate_password_hash(value)
 
 class Area(BaseModel, db.Model):
     """城区"""

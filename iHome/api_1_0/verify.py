@@ -71,9 +71,9 @@ def send_mes_code():
     mobile_code = '%06d' % random.randint(0,999999)
     logging.debug('短信验证码为：' + mobile_code)
     # 6.使用云通讯将短信验证码发送到注册用户手中
-    result = CCP().send_template_sms(mobile,[mobile_code,constants.SMS_CODE_REDIS_EXPIRES/60],'1')
-    if result != 1:
-        return jsonify(errno=RET.THIRDERR, errmsg='发送短信验证码失败')
+    #result = CCP().send_template_sms(mobile,[mobile_code,constants.SMS_CODE_REDIS_EXPIRES/60],'1')
+    #if result != 1:
+        #return jsonify(errno=RET.THIRDERR, errmsg='发送短信验证码失败')
 
     # 7.存储短信验证码到redis中:短信验证码在redis中的有效期一定要和短信验证码的提示信息一致
     try:

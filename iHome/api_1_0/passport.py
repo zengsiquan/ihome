@@ -5,9 +5,10 @@ from iHome import redis_store,db
 from flask import request,jsonify
 from iHome.utils.response_code import RET
 from iHome.models import User
+import json
 import logging
 
-@api.route('/users',method=['POST'])
+@api.route('/users', methods=['POST'])
 def register():
     """实现注册
        1.获取请求参数：手机号，短信验证码，密码
@@ -20,9 +21,9 @@ def register():
     """
 
     # 1.获取请求参数：手机号，短信验证码，密码
-    # json_dict = request.json
-    json_str = request.data
-    json_dict = json_str.loads(json_str)
+    json_dict = request.json
+    # json_str = request.data
+    # json_dict = json.loads(json_str)
 
     mobile = json_dict.get('mobile')
     mes_code = json_dict.get('mes_code')
@@ -49,14 +50,14 @@ def register():
     user = User()
     user.name = mobile
     user.mobile = mobile
-    user.password_hash = password
+    user.password = password
     try:
         db.session.add(user)
         db.session.commit()
     except Exception as e:
         logging.error(e)
         db.session.rollback()
-        return jsonify(RET.DBERR,errmsg='保存注册数据失败')
+        return jsonify(errno=RET.DBERR,errmsg='保存注册数据失败')
 
     # 6.给前端响应数据
-    return jsonify(RET.OK,errmsg='保存注册数据失败')
+    return jsonify(errno=RET.OK,errmsg='保存注册数据成功')
