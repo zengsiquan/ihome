@@ -15,6 +15,8 @@ $(document).ready(function(){
         if (response.errno == '0') {
             $('#user-name').html(response.data.name);
             $('#user-mobile').html(response.data.mobile);
+        } else if (response.errno == '4101'){
+            location.href = '/';
         } else {
             alert(response.errmsg);
         }

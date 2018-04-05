@@ -67,6 +67,8 @@ $(document).ready(function () {
             success:function (response) {
                 if (response.errno == '0') {
                     showSuccessMsg();
+                }  else if (response.errno == '4101'){
+                    location.href = '/';
                 } else {
                     alert(response.errmsg);
                 }

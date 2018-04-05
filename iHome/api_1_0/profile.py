@@ -6,8 +6,10 @@ from iHome.models import User
 from iHome.utils.image_storage import upload_image
 from iHome.utils.response_code import RET
 from iHome import constants,db
+from iHome.utils.commons import login_required
 
 @api.route('/users/avatar',methods=['POST'])
+@login_required
 def upload_avatar():
     """提供用户头像上传
     0. TODO 先判断用户是否登录
@@ -51,6 +53,7 @@ def upload_avatar():
     return jsonify(errno=RET.OK,errmsg='上传头像成功',data=avatar_url)
 
 @api.route('/users')
+@login_required
 def get_user_auth():
     user_id = session.get('user_id')
     try:
@@ -64,6 +67,7 @@ def get_user_auth():
     return jsonify(errno=RET.OK, errmsg='OK', data=response_data)
 
 @api.route('/users/name',methods=['PUT'])
+@login_required
 def set_user_name():
     # 0. TODO  先判断用户是否登录
     # 1.接受用户传入的新名字， new_name
