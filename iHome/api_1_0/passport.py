@@ -5,6 +5,7 @@ from iHome import redis_store,db
 from flask import request,jsonify,current_app,session
 from iHome.utils.response_code import RET
 from iHome.models import User
+from iHome.utils.commons import login_required
 import logging
 import re
 
@@ -94,3 +95,12 @@ def login():
     session['mobile'] = user.mobile
 
     return jsonify(errno=RET.OK,errmsg='登录成功')
+
+@api.route('/sessions',methods=['DELETE'])
+@login_required
+def logout():
+    session.pop('user_id')
+    session.pop('mobile')
+    session.pop('name')
+    return jsonify(errno=RET.OK,errmsg='退出登录成功')
+
