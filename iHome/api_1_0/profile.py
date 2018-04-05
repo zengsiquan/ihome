@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from . import api
-from flask import session,current_app,jsonify,request
+from flask import session,g,current_app,jsonify,request
 from iHome.models import User
 from iHome.utils.image_storage import upload_image
 from iHome.utils.response_code import RET
@@ -29,7 +29,8 @@ def upload_avatar():
         current_app.logger.error(e)
         return jsonify(errno=RET.THIRDERR, errmsg='上传头像失败')
 
-    user_id = session.get('user_id')
+    # user_id = session.get('user_id')
+    user_id = g.user_id
     try:
         user = User.query.get(user_id)
     except Exception as e:
@@ -55,7 +56,8 @@ def upload_avatar():
 @api.route('/users')
 @login_required
 def get_user_auth():
-    user_id = session.get('user_id')
+    # user_id = session.get('user_id')
+    user_id = g.user_id
     try:
         user = User.query.get(user_id)
     except Exception as e:
@@ -79,7 +81,8 @@ def set_user_name():
         return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
 
     # 3.查询当前登录用户
-    user_id = session.get('user_id')
+    # user_id = session.get('user_id')
+    user_id = g.user_id
     try:
         user = user = User.query.get(user_id)
     except Exception as e:

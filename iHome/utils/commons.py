@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from werkzeug.routing import BaseConverter
-from flask import session,jsonify
+from flask import session,jsonify,g
 from iHome.utils.response_code import RET
 from functools import wraps
 
@@ -21,5 +21,7 @@ def login_required(view_func):
         if not user_id:
             return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
         else:
+            # 表示用户已登录，使用g变量保存住user_id,方便在view_func调用的时候，内部可以直接使用g变量里面的user_id
+            g.user_id = user_id
             return view_func(*args,**kwargs)
     return wrapper
