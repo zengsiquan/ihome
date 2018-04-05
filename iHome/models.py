@@ -42,10 +42,10 @@ class User(BaseModel, db.Model):
 
     def to_dict(self):
         response_data = {
-            'avatar_url': self.avatar_url,
-            'name': self.user.name,
-            'mobile': self.user.mobile,
-            'user_id': self.user.id
+            'avatar_url': constants.QINIU_DOMIN_PREFIX + (self.avatar_url if self.avatar_url else ""),
+            'name': self.name,
+            'mobile': self.mobile,
+            'user_id': self.id
         }
         return response_data
 
