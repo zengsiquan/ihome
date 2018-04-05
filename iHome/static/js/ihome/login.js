@@ -11,6 +11,7 @@ $(document).ready(function() {
         $("#password-err").hide();
     });
     // TODO: 添加登录表单提交操作
+
     $(".form-login").submit(function(e){
         e.preventDefault();
         mobile = $("#mobile").val();
@@ -25,5 +26,27 @@ $(document).ready(function() {
             $("#password-err").show();
             return;
         }
+        var params = {
+          'mobile':mobile,
+          'password':passwd
+        };
+
+        // 发送登录请求
+        $.ajax({
+            url:'/api/1.0/sessions',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',
+            headers:{'X-CSRFToken':getCookie('csrf_token')},
+            success:function (resposne) {
+                if (resposne.errno == '0') {
+                    // 登录成功进入到主页
+                    location.href = '/';
+                } else {
+                    alert(resposne.errmsg);
+                }
+            }
+        });
+
     });
-})
+});
