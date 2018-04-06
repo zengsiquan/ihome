@@ -8,6 +8,68 @@ from iHome.utils.response_code import RET
 from iHome import constants,db
 from iHome.utils.commons import login_required
 
+
+
+@api.route('/users/auth',methods=['POST'])
+@login_required
+def get_user_auth():
+    """查询实名认证信息
+        0.判断用户是否登录
+        1.获取user_id,查询user信息
+        2.构造响应数据
+        3.响应结果
+    """
+    # 1.获取user_id,查询user信息
+    user_id = g.user_id
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询用户数据失败')
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg='用户不存在')
+
+    # 2.构造响应数据
+    response_data = user.auth_to_dict()
+
+    # 3.响应结果
+    return jsonify(errno=RET.OK, errmsg='OK', data=response_data)
+
+
+
+
+@api.route('/users/auth',methods=['POST'])
+@login_required
+def set_user_auth():
+    json_dict = request.json
+    real_name = json_dict.get('real_name')
+    id_card = json_dict.get('id_card')
+
+    if not all([real_name,id_card]):
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+
+    user_id = g.user_id
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询用户数据失败')
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg='用户不存在')
+
+        # 4.将real_name , id_card赋值给用户模型对象
+    user.real_name = real_name
+    user.id_card = id_card
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='保存实名认证数据失败')
+
+    # 6.响应结果
+    return jsonify(errno=RET.OK, errmsg='实名认证成功')
+
 @api.route('/users/avatar',methods=['POST'])
 @login_required
 def upload_avatar():
@@ -71,7 +133,7 @@ def get_user_auth():
 @api.route('/users/name',methods=['PUT'])
 @login_required
 def set_user_name():
-    # 0. TODO  先判断用户是否登录
+    # 0.先判断用户是否登录
     # 1.接受用户传入的新名字， new_name
     json_dict = request.json
     new_name = json_dict.get('name')
