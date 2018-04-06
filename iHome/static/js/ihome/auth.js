@@ -33,5 +33,49 @@ $(document).ready(function(){
     });
 
     // TODO: 管理实名信息表单的提交行为
+    $('#form-auth').submit(function (event) {
+        event.preventDefault();
 
-})
+        var real_name = $('#real-name').val();
+        var id_card = $('#id-card').val();
+
+        if (!real_name) {
+            $('.error-msg').show();
+            return;
+        }
+
+        if (!id_card) {
+            $('.error-msg').show();
+            return;
+        }
+
+        $('.error-msg').hide();
+
+        var params = {
+            'real_name':real_name,
+            'id_card':id_card
+        };
+
+        $.ajax({
+            url:'/api/1.0/users/auth',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',
+            headers:{'X-CSRFToken':getCookie('csrf_token')},
+            success:function (response) {
+                if (response.errno == '0') {
+                    showSuccessMsg();
+                    // 将输入框设置为不可交互
+                    $('#real-name').attr('disabled', true);
+                    $('#id-card').attr('disabled', true);
+
+                    // 将保存按钮影藏
+                    $('.btn-success').hide();
+                } else {
+                    alert(response.errmsg);
+                }
+            }
+        });
+    });
+
+});

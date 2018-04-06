@@ -10,7 +10,7 @@ from iHome.utils.commons import login_required
 
 
 
-@api.route('/users/auth',methods=['POST'])
+@api.route('/users/auth',methods=['GET'])
 @login_required
 def get_user_auth():
     """查询实名认证信息
@@ -34,9 +34,6 @@ def get_user_auth():
 
     # 3.响应结果
     return jsonify(errno=RET.OK, errmsg='OK', data=response_data)
-
-
-
 
 @api.route('/users/auth',methods=['POST'])
 @login_required
@@ -117,7 +114,7 @@ def upload_avatar():
 
 @api.route('/users')
 @login_required
-def get_user_auth():
+def get_user_info():
     # user_id = session.get('user_id')
     user_id = g.user_id
     try:
