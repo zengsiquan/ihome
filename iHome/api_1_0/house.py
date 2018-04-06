@@ -2,10 +2,11 @@
 
 from . import api
 from flask import current_app,jsonify,request,g
-from iHome.models import Area,House,Facility
+from iHome.models import Area,House,Facility,HouseImage
 from iHome.utils.commons import login_required
 from iHome.utils.response_code import RET
-from iHome import db
+from iHome.utils.image_storage import upload_image
+from iHome import db,constants
 
 @api.route('/houses',methods=['POST'])
 @login_required
@@ -60,16 +61,16 @@ def pub_house():
     house.facilities = Facility.query.filter(Facility.id.in_(facilities)).all()
 
     # 4.保存到数据库
-    # try:
-    #     db.session.add(house)
-    #     db.session.commit()
-    # except Exception as e:
-    #     current_app.logger.error(e)
-    #     db.session.rollback()
-    #     return jsonify(errno=RET.DBERR, errmsg='发布新房源失败')
+    try:
+        db.session.add(house)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='发布新房源失败')
 
     # 5.响应结果
-    return jsonify(errno=RET.OK, errmsg='发布新房源成功')
+    return jsonify(errno=RET.OK, errmsg='发布新房源成功',data={'house_id':house.id})
 
 
 @api.route('/areas')
@@ -90,3 +91,54 @@ def get_areas():
         area_dict_list.append(area.to_dict())
 
     return jsonify(errno=RET.OK, errmsg='OK', data=area_dict_list)
+
+@api.route('/house/image',methods=['POST'])
+@login_required
+def upload__house_image():
+    """发布房屋图片
+        0.判断用户是否是登录 @login_required
+        1.接受参数：image_data, house_id， 并做校验
+        2.使用house_id查询house模型对象数据，因为如果查询不出来，就不需要上传图片了
+        3.调用上传图片的工具方法，发布房屋图片
+        4.将图片的七牛云的key,存储到数据库
+        5.响应结果：上传的房屋图片，需要立即刷新出来
+    """
+    try:
+        image_data = request.files.get('house_image')
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='无法收到房屋图片')
+
+    house_id = request.form.get('house_id')
+    if not house_id:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少必传参数')
+    # 2.使用house_id查询house模型对象数据，因为如果查询不出来，就不需要上传图片了
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+    if not house:
+        return jsonify(errno=RET.NODATA, errmsg='房屋不存在')
+
+    try:
+        key = upload_image(image_data)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR, errmsg='上传房屋图片失败')
+    # 4.将图片的七牛云的key,存储到数据库
+    house_image = HouseImage()
+    house_image.house_id = house_id
+    house_image.url = key
+
+    try:
+        db.session.add(house_image)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='存储房屋图片失败')
+
+    # 5.响应结果：上传的房屋图片，需要立即刷新出来
+    image_url = constants.QINIU_DOMIN_PREFIX + key
+    return jsonify(errno=RET.OK, errmsg='发布房屋图片成功',data={'image_url':image_url})
