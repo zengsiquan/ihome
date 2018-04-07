@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from . import api
-from flask import current_app,jsonify,request,g
+from flask import current_app,jsonify,request,g,session
 from iHome.models import Area,House,Facility,HouseImage
 from iHome.utils.commons import login_required
 from iHome.utils.response_code import RET
@@ -169,5 +169,8 @@ def get_house_detail(house_id):
     # 2.构造响应数据
     response_data = house.to_full_dict()
 
+    # 获取user_id : 当用户登录后访问detail.html，就会有user_id，反之，没有user_id
+    login_user_id = session.get('user_id', -1)
+
     # 3.响应结果
-    return jsonify(errno=RET.OK, errmsg='OK', data={'house':response_data})
+    return jsonify(errno=RET.OK, errmsg='OK', data={'house':response_data, 'login_user_id':login_user_id})
