@@ -174,3 +174,26 @@ def get_house_detail(house_id):
 
     # 3.响应结果
     return jsonify(errno=RET.OK, errmsg='OK', data={'house':response_data, 'login_user_id':login_user_id})
+
+@api.route('/houses/index')
+def get_house_index():
+    """提供房屋最新的推荐
+    1.查询最新发布的五个房屋信息,（按照时间排倒序）
+    2.构造响应数据
+    3.响应结果
+    """
+
+    # 1.查询最新发布的五个房屋信息 houses == [House, House, House, ...]
+    try:
+        houses = House.query.order_by(House.create_time.desc()).limit(constants.HOME_PAGE_MAX_HOUSES)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+
+    # 2.构造响应数据
+    house_dict_list = []
+    for house in houses:
+        house_dict_list.append(house.to_basic_dict())
+
+    # 3.响应结果
+    return jsonify(errno=RET.OK, errmsg='OK', data=house_dict_list)
