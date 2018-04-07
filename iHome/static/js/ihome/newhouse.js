@@ -11,10 +11,16 @@ $(document).ready(function(){
     $.get('/api/1.0/areas', function (response) {
         if (response.errno == '0') {
             // 渲染城区信息 <option value="1">东城区</option>
-            $.each(response.data,function (i, area) {
+            //$.each(response.data,function (i, area) {
                 //console.log(area.aname)
-                $('#area-id').append('<option value="'+area.aid+'">'+area.aname+'</option>');
-            });
+                //$('#area-id').append('<option value="'+area.aid+'">'+area.aname+'</option>');
+            //});
+
+            // art-template模板引擎渲染界面
+            // 生成要渲染的html数据
+            var html = template('areas-tmpl', {'areas':response.data});
+            // 使用生成的html数据，渲染目标标签
+            $('#area-id').html(html);
         } else {
             alert(response.errmsg);
         }
@@ -62,6 +68,7 @@ $(document).ready(function(){
             headers:{'X-CSRFToken':getCookie('csrf_token')},
             success:function (response) {
                 if (response.errno == '0') {
+                    console.log(response.data.image_url)
                     $('.house-image-cons').append('<img src="'+response.data.image_url+'">');
                 } else if (response.errno == '4101')  {
                     location.href = '/';

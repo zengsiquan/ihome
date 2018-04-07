@@ -11,7 +11,6 @@ from iHome import db,constants
 @api.route('/houses',methods=['POST'])
 @login_required
 def pub_house():
-    json_dict = request.json
 
     # 1.接受所有参数,并判断是否缺少
     json_dict = request.json
@@ -92,7 +91,7 @@ def get_areas():
 
     return jsonify(errno=RET.OK, errmsg='OK', data=area_dict_list)
 
-@api.route('/house/image',methods=['POST'])
+@api.route('/houses/image',methods=['POST'])
 @login_required
 def upload__house_image():
     """发布房屋图片
@@ -123,6 +122,7 @@ def upload__house_image():
 
     try:
         key = upload_image(image_data)
+
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.THIRDERR, errmsg='上传房屋图片失败')
@@ -130,6 +130,10 @@ def upload__house_image():
     house_image = HouseImage()
     house_image.house_id = house_id
     house_image.url = key
+
+    # 选择一个图片，作为房屋的默认图片
+    if not house.index_image_url:
+        house.index_image_url = key
 
     try:
         db.session.add(house_image)
@@ -141,4 +145,29 @@ def upload__house_image():
 
     # 5.响应结果：上传的房屋图片，需要立即刷新出来
     image_url = constants.QINIU_DOMIN_PREFIX + key
+
     return jsonify(errno=RET.OK, errmsg='发布房屋图片成功',data={'image_url':image_url})
+
+@api.route('/houses/detail/<int:house_id>')
+def get_house_detail(house_id):
+    """提供房屋详情
+    0.获取house_id，通过正则。如果house_id不满足条件不会进入到使用当中
+    1.查询房屋全部信息
+    2.构造响应数据
+    3.响应结果
+    """
+
+    # 1.查询房屋全部信息
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+    if not house:
+        return jsonify(errno=RET.NODATA, errmsg='房屋不存在')
+
+    # 2.构造响应数据
+    response_data = house.to_full_dict()
+
+    # 3.响应结果
+    return jsonify(errno=RET.OK, errmsg='OK', data={'house':response_data})
