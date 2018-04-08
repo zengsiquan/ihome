@@ -211,3 +211,18 @@ def get_house_index():
 
     # 3.响应结果
     return jsonify(errno=RET.OK, errmsg='OK', data=house_dict_list)
+
+@api.route('/houses/search')
+def get_house_search():
+    # 1.查询所有房屋信息
+    try:
+        houses = House.query.all() # u字符串的房屋列表
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+    # 2.构造响应数据
+    house_dict_list = []
+    for house in houses:
+        house_dict_list.append(house.to_basic_dict())
+
+    return jsonify(errno=RET.OK,errmsg='OK',data=house_dict_list)

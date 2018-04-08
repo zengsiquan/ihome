@@ -85,3 +85,4 @@ def send_mes_code():
     # 8.响应短信发送的结果
     # response = make_response(result)
     return jsonify(errno=RET.OK, errmsg='发送短信验证码成功')
+
