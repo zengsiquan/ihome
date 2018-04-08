@@ -215,11 +215,29 @@ def get_house_index():
 @api.route('/houses/search')
 def get_house_search():
     # 1.查询所有房屋信息
+    aid = request.args.get('aid')
+    sk = request.args.get('sk')
+    house_query = House.query
     try:
-        houses = House.query.all() # u字符串的房屋列表
+        # 根据用户选中的城区信息，筛选出满足条件的房屋信息
+        if aid:
+            house_query = house_query.filter(House.area_id == aid)
+            # 根据排序规则对数据进行排序
+        if sk == 'booking':
+            house_query = house_query.order_by(House.order_count.desc())
+        elif sk == 'price-inc':
+            house_query = house_query.order_by(House.price.asc())
+        elif sk == 'price-des':
+            house_query = house_query.order_by(House.price.desc())
+        else:
+            house_query = house_query.order_by(House.create_time.desc())
+
+        houses = house_query.all()  # u字符串的房屋列表
+
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+
     # 2.构造响应数据
     house_dict_list = []
     for house in houses:
