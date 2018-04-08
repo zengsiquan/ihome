@@ -217,7 +217,15 @@ def get_house_search():
     # 1.查询所有房屋信息
     aid = request.args.get('aid')
     sk = request.args.get('sk')
+    p = request.args.get('p')
     house_query = House.query
+
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数有误')
+
     try:
         # 根据用户选中的城区信息，筛选出满足条件的房屋信息
         if aid:
@@ -232,8 +240,13 @@ def get_house_search():
         else:
             house_query = house_query.order_by(House.create_time.desc())
 
-        houses = house_query.all()  # u字符串的房屋列表
-
+        #houses = house_query.all()  # u字符串的房屋列表
+        # paginate(页码，每页个数，有错是否输出)
+        paginate = house_query.paginate(p,constants.HOUSE_LIST_PAGE_CAPACITY,False)
+        # 获取当前页的房屋模型对象
+        houses = paginate.items
+        # 获取一共分了多少页，一定要传给前端
+        total_page = paginate.pages
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
@@ -243,4 +256,8 @@ def get_house_search():
     for house in houses:
         house_dict_list.append(house.to_basic_dict())
 
-    return jsonify(errno=RET.OK,errmsg='OK',data=house_dict_list)
+    response_data = {
+        'houses': house_dict_list,
+        'total_page': total_page
+    }
+    return jsonify(errno=RET.OK,errmsg='OK',data=response_data)
