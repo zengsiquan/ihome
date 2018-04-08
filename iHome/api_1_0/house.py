@@ -6,7 +6,7 @@ from iHome.models import Area,House,Facility,HouseImage
 from iHome.utils.commons import login_required
 from iHome.utils.response_code import RET
 from iHome.utils.image_storage import upload_image
-from iHome import db,constants
+from iHome import db,constants,redis_store
 
 @api.route('/houses',methods=['POST'])
 @login_required
@@ -80,7 +80,15 @@ def get_areas():
     3.响应结果
     """
     try:
-        areas = Area.query.all()
+        area_dict_list = redis_store.get('Areas')
+        if area_dict_list:
+            return jsonify(errno=RET.OK, errmsg='OK', data=eval(area_dict_list))
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 1.查询所有的城区信息 areas == [Area,Area,Area,...]
+    try:
+        areas = Area.query.all() # 查询类对象的所有信息
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询城区信息失败')
@@ -88,6 +96,12 @@ def get_areas():
     area_dict_list = []
     for area in areas:
         area_dict_list.append(area.to_dict())
+
+    # 缓存城区信息到redis : 没有缓存成功也没有影响，因为前爱你会判断和查询
+    try:
+        redis_store.set('Areas', area_dict_list, constants.AREA_INFO_REDIS_EXPIRES)
+    except Exception as e:
+        current_app.logger.error(e)
 
     return jsonify(errno=RET.OK, errmsg='OK', data=area_dict_list)
 

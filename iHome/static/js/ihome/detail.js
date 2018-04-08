@@ -44,7 +44,7 @@ $(document).ready(function(){
                 // 当前查看详情的用户不是登录用户 展示即可预定按钮
                 $('.book-house').show();
                 // 添加即可预定的点击跳转的逻辑
-                $('.book-house').attr('href', 'booking.html?hid+' + response.data.house.hid)
+                $('.book-house').attr('href', 'booking.html?hid=' + response.data.house.hid)
 
             }
         } else{
