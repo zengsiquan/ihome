@@ -2,7 +2,7 @@
 
 from . import api
 from flask import session,g,current_app,jsonify,request
-from iHome.models import User
+from iHome.models import User,House
 from iHome.utils.image_storage import upload_image
 from iHome.utils.response_code import RET
 from iHome import constants,db
@@ -165,3 +165,28 @@ def set_user_name():
     session['name'] = new_name
     # 6.响应结果
     return jsonify(errno=RET.OK, errmsg='修改用户名成功')
+
+@api.route('/users/houses')
+@login_required
+def get_user_hosues():
+    """获取我的房源
+    0.判断用户是否登录
+    1.获取当前登录用户的user_id
+    2.使用user_id查询该登录用户发布的所有的房源
+    3.构造响应数据
+    4.响应结果
+    """
+    user_id = g.user_id
+
+    try:
+        houses = House.query.filter(House.user_id==user_id).all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+
+
+    house_dict_list = []
+    for house in houses:
+        house_dict_list.append(house.to_basic_dict())
+
+    return jsonify(errno=RET.OK, errmsg='OK', data=house_dict_list)

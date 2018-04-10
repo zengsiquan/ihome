@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 #处理订单逻辑
-from flask import request,current_app,jsonify,g
+from flask import request,current_app,jsonify,g,session
 from iHome.models import House,Order
 from iHome.utils.response_code import RET
 from iHome import db
@@ -19,7 +19,9 @@ def set_order_status(order_id):
     4.更新数据到数据库
     5.响应结果
     """
-
+    action = request.args.get('action')
+    if action not in ['accept','reject']:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
     # 1.查询order_id对应的订单信息
     try:
         order = Order.query.filter(Order.id==order_id, Order.status=='WAIT_ACCEPT').first()
@@ -34,10 +36,15 @@ def set_order_status(order_id):
     landlord_user_id = order.house.user_id
     if login_user_id != landlord_user_id:
         return jsonify(errno=RET.USERERR, errmsg='权限不够')
-
+    if action == 'accept':
     # 3.修改订单的status属性为"已接单"
-    order.status = 'WAIT_COMMENT'
-
+        order.status = 'WAIT_COMMENT'
+    else:
+        order.status = 'REJECTED'
+        reason = request.json.get('reason')
+        if not reason:
+            return jsonify(errno=RET.PARAMERR, errmsg='缺少拒单理由')
+        order.comment = reason
     # 4.更新数据到数据库
     try:
         db.session.commit()
@@ -144,5 +151,31 @@ def get_order_list():
     for order in orders:
         order_dict_list.append(order.to_dict())
     return jsonify(errno=RET.OK,errmsg='OK',data=order_dict_list)
+
+@api.route('/orders/<int:order_id>/comment',methods=['POST'])
+@login_required
+def set_order_comment(order_id):
+    user_id = g.user_id
+    comment = request.json.get('comment')
+    if not comment:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+    try:
+        # order = Order.query.get(order_id)
+        order = Order.query.filter(Order.id==order_id,Order.user_id==user_id,Order.status=='WAIT_COMMENT').first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询订单数据失败')
+    if not order:
+        return jsonify(errno=RET.NODATA,errmsg='该订单不存在')
+    order.comment = comment
+    order.status = 'COMPLETE'
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='保存评价信息失败')
+    return jsonify(errno=RET.OK, errmsg='OK')
+
 
 
