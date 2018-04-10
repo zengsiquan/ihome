@@ -8,6 +8,47 @@ from iHome.utils.commons import login_required
 import datetime
 from . import api
 
+@api.route('/orders/<int:order_id>', methods=['PUT'])
+@login_required
+def set_order_status(order_id):
+    """确认订单
+    0.判断是否登录
+    1.查询order_id对应的订单信息
+    2.判断当前登录使用是否是该订单的房东
+    3.修改订单的status属性为"已接单"
+    4.更新数据到数据库
+    5.响应结果
+    """
+
+    # 1.查询order_id对应的订单信息
+    try:
+        order = Order.query.filter(Order.id==order_id, Order.status=='WAIT_ACCEPT').first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询订单数据失败')
+    if not order:
+        return jsonify(errno=RET.NODATA, errmsg='订单不存在')
+
+    # 2.判断当前登录用户是否是该订单的房东
+    login_user_id = g.user_id
+    landlord_user_id = order.house.user_id
+    if login_user_id != landlord_user_id:
+        return jsonify(errno=RET.USERERR, errmsg='权限不够')
+
+    # 3.修改订单的status属性为"已接单"
+    order.status = 'WAIT_COMMENT'
+
+    # 4.更新数据到数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='保存订单状态失败')
+
+    # 5.响应结果
+    return jsonify(errno=RET.OK, errmsg='OK')
+
 @api.route('/orders',methods=['POST'])
 @login_required
 def create_order():
