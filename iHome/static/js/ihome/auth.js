@@ -17,11 +17,12 @@ $(document).ready(function(){
     $.get('/api/1.0/users/auth',function (response) {
         if (response.errno == '0'){
            if (response.data.real_name && response.data.id_card) {
+               console.log(response.data.real_name,response.data.id_card);
               $('#real-name').val(response.data.real_name);
-              $('#id_card').val(response.data.id_card);
+              $('#id-card').val(response.data.id_card);
               // 取消交互
               $('#real-name').attr('disabled',true);
-              $('#id_card').attr('disabled',true);
+              $('#id-card').attr('disabled',true);
               // 将保存按钮影藏
               $('.btn-success').hide();
            }

@@ -48,24 +48,19 @@ function updateHouseData(action) {
     // 参数1 ： 请求地址；参数2：请求参数(可选的，如果有就传入，没有就省略)；参数3：请求完成后的回调
     // params : 存储的是要通过GET请求发送给服务器的字符串信息
     // http://127.0.0.1:5000/search.html?aid=2&aname=&sd=&ed=
-    $.get('/api/1.0/houses/search',params,function (response) {
-        // 能够进入到该回调，说明上次的请求结束，需要将house_data_querying = fasle
+    $.get('api/1.0/houses/search',params,function (response) {
+        // toddo1:能够进入进来，说明上次请求已经结束，需设置house_data_querying=false
         house_data_querying = false;
-        if (response.errno == '0'){
-
-            // 后端需要将总页数返回给前端并保存 total_page
+        if (response.errno == '0') {
+            // toddo1:获取列列表数据成功，传⼊入分⻚页后的总⻚页数 total_page
             total_page = response.data.total_page;
-            // 使用art-template模板引擎，生成需要渲染的html内容
             var html = template('house-list-tmpl',{'houses':response.data.houses});
-
-            // 区分是上拉刷新，还是加载新的数据，要区分用户是直接加载的数据还是上拉刷新 action == renew 表示重新加载新的数据
+            // TODO 3、区分⽤用户是在重新刷新还是上拉刷新
             if (action == 'renew') {
-                // 加载新的数据，将html渲染到界面
-                $('.house-list').html(html);
+               $('.house-list').html(html);
             } else {
-                // 每次上拉刷新成功后，需要对 cur_page 累加 1
+                // TODO 4、如果是上拉刷新，需要给cur_page + 1
                 cur_page = next_page;
-                // 上拉刷新，上拉刷新得到新的数据时，不要覆盖上一页的数据，需要拼接到上一页的下面
                 $('.house-list').append(html);
             }
 

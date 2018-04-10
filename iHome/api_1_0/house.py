@@ -2,11 +2,12 @@
 
 from . import api
 from flask import current_app,jsonify,request,g,session
-from iHome.models import Area,House,Facility,HouseImage
+from iHome.models import Area,House,Facility,HouseImage,Order
 from iHome.utils.commons import login_required
 from iHome.utils.response_code import RET
 from iHome.utils.image_storage import upload_image
 from iHome import db,constants,redis_store
+import datetime
 
 @api.route('/houses',methods=['POST'])
 @login_required
@@ -212,52 +213,84 @@ def get_house_index():
     # 3.响应结果
     return jsonify(errno=RET.OK, errmsg='OK', data=house_dict_list)
 
+
+
+# http://127.0.0.1:5000/search.html?aid=2&aname=&sd=&ed=&p=
 @api.route('/houses/search')
 def get_house_search():
-    # 1.查询所有房屋信息
+    # current_app.logger.debug(request.args)
     aid = request.args.get('aid')
     sk = request.args.get('sk')
-    p = request.args.get('p')
-    house_query = House.query
-
+    p = request.args.get('p',1) # 如果不传，默认第一页
+    sd = request.args.get('sd','') # u'2018-04-07'
+    ed = request.args.get('ed','') # u'2018-04-08'
     try:
         p = int(p)
+        if sd:
+            # 将时间字符串转成时间对象
+            start_date = datetime.datetime.strptime(sd, '%Y-%m-%d')
+        if ed:
+            end_date = datetime.datetime.strptime(ed, '%Y-%m-%d')
+        # 自己校验入住时间是否小于离开的时间
+        if start_date and end_date:
+            # 断言：入住时间一定小于离开时间，如果不满足，就抛出异常
+            assert start_date < end_date, Exception('入住时间有误')
+
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg='参数有误')
 
     try:
+        #获取BaseQUery对象,保存即将要查询出来的数据
+        house_query = House.query
         # 根据用户选中的城区信息，筛选出满足条件的房屋信息
         if aid:
-            house_query = house_query.filter(House.area_id == aid)
-            # 根据排序规则对数据进行排序
-        if sk == 'booking':
+            house_query = house_query.filter(House.area_id==aid)
+        # 如果用户传入的时间段，在订单中，也存在，就把满足冲突条件的订单查询出来 conflict_orders
+        # 根据用户传入的入住时间和离开的时间，跟订单里面的时间进行对比
+        conflict_orders = []
+        if start_date and end_date:
+            conflict_orders = Order.query.filter(end_date > Order.begin_date, start_date < Order.end_date).all()
+        elif start_date:
+            conflict_orders = Order.query.filter(start_date < Order.end_date).all()
+        elif end_date:
+            conflict_orders = Order.query.filter(end_date > Order.begin_date).all()
+
+        # 再通过冲突的订单，查询出里面的house_id,封装到列表中 conflict_house_ids
+        if conflict_orders:
+            conflict_house_ids = [order.house_id for order in conflict_orders]
+            # 最后在查询House是，not_in(conflict_house_ids)
+            house_query = house_query.filter(House.id.notin_(conflict_house_ids))
+
+        # 根据排序规则对数据进行排序
+        if sk == 'booking': # 订单高到低
             house_query = house_query.order_by(House.order_count.desc())
-        elif sk == 'price-inc':
+        elif sk == 'price-inc':  # 价格低到高
             house_query = house_query.order_by(House.price.asc())
-        elif sk == 'price-des':
+        elif sk == 'price-des':  # 价格⾼到低
             house_query = house_query.order_by(House.price.desc())
         else:
             house_query = house_query.order_by(House.create_time.desc())
 
-        #houses = house_query.all()  # u字符串的房屋列表
-        # paginate(页码，每页个数，有错是否输出)
+        # 需要使用分页功能，避免一次性查询所有数据，使用分页代码，替换all()
         paginate = house_query.paginate(p,constants.HOUSE_LIST_PAGE_CAPACITY,False)
-        # 获取当前页的房屋模型对象
         houses = paginate.items
-        # 获取一共分了多少页，一定要传给前端
         total_page = paginate.pages
+
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg='查询房屋数据失败')
+        return jsonify(errno=RET.DBERR,errmsg='查询房屋数据失败')
 
-    # 2.构造响应数据
-    house_dict_list = []
+    # 构造响应数据
+    houses_dict_list = []
     for house in houses:
-        house_dict_list.append(house.to_basic_dict())
+        houses_dict_list.append(house.to_basic_dict())
 
     response_data = {
-        'houses': house_dict_list,
-        'total_page': total_page
+        'total_page':total_page,
+        'houses':houses_dict_list
     }
-    return jsonify(errno=RET.OK,errmsg='OK',data=response_data)
+
+    # 3.响应结果
+    return jsonify(errno=RET.OK, errmsg='OK', data=response_data)
+
