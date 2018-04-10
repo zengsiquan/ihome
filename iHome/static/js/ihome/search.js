@@ -44,7 +44,7 @@ function updateHouseData(action) {
         sk:sortKey,
         p:next_page
     };
-    // TODO: 获取房屋列表信息
+    //  获取房屋列表信息
     // 参数1 ： 请求地址；参数2：请求参数(可选的，如果有就传入，没有就省略)；参数3：请求完成后的回调
     // params : 存储的是要通过GET请求发送给服务器的字符串信息
     // http://127.0.0.1:5000/search.html?aid=2&aname=&sd=&ed=
@@ -55,11 +55,11 @@ function updateHouseData(action) {
             // toddo1:获取列列表数据成功，传⼊入分⻚页后的总⻚页数 total_page
             total_page = response.data.total_page;
             var html = template('house-list-tmpl',{'houses':response.data.houses});
-            // TODO 3、区分⽤用户是在重新刷新还是上拉刷新
+            // 区分⽤用户是在重新刷新还是上拉刷新
             if (action == 'renew') {
                $('.house-list').html(html);
             } else {
-                // TODO 4、如果是上拉刷新，需要给cur_page + 1
+                // 如果是上拉刷新，需要给cur_page + 1
                 cur_page = next_page;
                 $('.house-list').append(html);
             }
