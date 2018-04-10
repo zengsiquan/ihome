@@ -19,7 +19,17 @@ $(document).ready(function(){
     $(window).on('resize', centerModals);
 
     // TODO: 查询房客订单
-
+    $.get('/api/1.0/orders',function (response) {
+        if (response.errno == '0') {
+            // 渲染我的订单界面
+            var html = template('orders-list-tmpl',{'orders':response.data});
+            $('.orders-list').html(html);
+        } else if (response.errno == '4101') {
+            location.href = '/';
+        } else {
+            alert(response.errmsg)
+        }
+    });
     // TODO: 查询成功之后需要设置评论的相关处理
     $(".order-comment").on("click", function(){
         var orderId = $(this).parents("li").attr("order-id");
