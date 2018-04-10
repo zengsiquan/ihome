@@ -80,8 +80,20 @@ def get_order_list():
 
     # 1.获取参数：user_id = g.user_id
     user_id = g.user_id
+    role = request.args.get('role')
+    if role not in ['custom', 'landlord']:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少必传参数')
+
     try:
-        orders = Order.query.filter(Order.user_id==user_id).all()
+        if role == 'custom':
+            orders = Order.query.filter(Order.user_id==user_id).all()
+        else:
+            # 查询该登录用户发布的房屋信息
+            houses = House.query.filter(House.user_id==user_id).all()
+            # 获取发布的房屋的ids
+            house_ids = [house.id for house in houses]
+            # 从订单中查询出订单中的house_id在house_ids,Order.house_id为大列表
+            orders = Order.query.filter(Order.house_id.in_(house_ids)).all()
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询订单失败')

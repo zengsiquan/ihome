@@ -18,8 +18,8 @@ $(document).ready(function(){
     $('.modal').on('show.bs.modal', centerModals);      //当模态框出现的时候
     $(window).on('resize', centerModals);
 
-    // TODO: 查询房客订单
-    $.get('/api/1.0/orders',function (response) {
+    // 查询我的订单
+    $.get('/api/1.0/orders?role=custom',function (response) {
         if (response.errno == '0') {
             // 渲染我的订单界面
             var html = template('orders-list-tmpl',{'orders':response.data});
